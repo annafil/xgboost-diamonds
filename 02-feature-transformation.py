@@ -13,31 +13,62 @@ st.write(
 
 session = st.session_state.session
 
-# Specify the table name where we stored the diamonds dataset
-# **nChange this only if you named your table something else in the data ingest notebook **
-DEMO_TABLE = 'diamonds'
-input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
+tab1,tab2 = st.tabs(["Load cleaned data","Transform features"])
 
-st.write(input_tbl)
+with tab1: 
 
-# First, we read in the data from a Snowflake table into a Snowpark DataFrame
-diamonds_df = session.table(input_tbl)
+    code_load_clean_data = '''
 
-st.dataframe(diamonds_df)
+        # Specify the table name where we stored the diamonds dataset
+        # Change this only if you named your table something else 
+        # in the data ingest step
+        DEMO_TABLE = 'diamonds'
+        input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
 
-st.write(
-        "Feature Transformations",
-        "\n\n We will illustrate a few of the transformation functions here, but the rest can be found in the documentation.",
-        "\n\n Let's use the MinMaxScaler to normalize the CARAT column."
-)
+         # Load table data into a DataFrame
+        diamonds_df = session.table(input_tbl)
 
-# Normalize the CARAT column
-snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
-normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
+        diamonds_df.head(10)
+    '''
 
-# Reduce the number of decimals
-new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
-normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+    st.code(code_load_clean_data)
 
-st.write(normalized_diamonds_df)
+    if st.button("Run the example", key=1):
+
+
+        # Specify the table name where we stored the diamonds dataset
+        # **nChange this only if you named your table something else in the data ingest notebook **
+        DEMO_TABLE = 'diamonds'
+        input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
+
+        # First, we read in the data from a Snowflake table into a Snowpark DataFrame
+        diamonds_df = session.table(input_tbl)
+
+        st.write(diamonds_df.to_pandas().head(10))
+
+
+with tab2: 
+    st.write(
+            "We will illustrate a few of the transformation functions here, but the rest can be found in the documentation.",
+            "\n\n Let's use the MinMaxScaler to normalize the CARAT column."
+    )
+
+    if st.button("Run the example", key=2):
+
+        if 'diamonds_df' in st.session_state:
+            diamonds_df = st.session_state.diamonds_df
+
+        try:
+            # Normalize the CARAT column
+            snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
+            normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
+
+            # Reduce the number of decimals
+            new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
+            normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+
+            st.write(normalized_diamonds_df)
+
+        except: 
+            st.write('Run the load example first!')
 

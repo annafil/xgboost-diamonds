@@ -44,7 +44,7 @@ with st.sidebar:
         st.code(f"""
 
         PySnowpark: {snowpark_version[0], snowpark_version[1], snowpark_version[2] }
-        Schema: {session.get_current_schema()}
+        Current Schema: {session.get_current_schema()}
         Snowflake version: {snowflake_environment[0][1]}
         """)
 
