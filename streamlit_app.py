@@ -38,16 +38,21 @@ snowpark_version = VERSION
 
 with st.sidebar: 
     with st.expander("Inspect the app connection"):
-        
-        st.write('Connection Established with the following parameters:')
-        st.write('User                        : ' , snowflake_environment[0][0])
-        st.write('Snowpark for Python version : ', snowpark_version[0], snowpark_version[1], snowpark_version[2]) 
-        st.write('Role                        : ', session.get_current_role())
-        st.write('Database                    : ', session.get_current_database())
-        st.write('Schema                      : ', session.get_current_schema())
-        st.write('Warehouse                    : ', session.get_current_warehouse())
-        st.write('Snowflake version            : ', snowflake_environment[0][1])
 
+        st.caption("Connection Established with the following parameters:")
+
+        st.code(f"""
+
+        PySnowpark: {snowpark_version[0], snowpark_version[1], snowpark_version[2] }
+        Schema: {session.get_current_schema()}
+        Snowflake version: {snowflake_environment[0][1]}
+        """)
+
+        # uncomment and add in above code block to help debug your connection 
+        # User: {snowflake_environment[0][0]}
+        # Role: {session.get_current_role()}
+        # Database: {session.get_current_database()}
+        # Warehouse: {session.get_current_warehouse()}
 
 
 
