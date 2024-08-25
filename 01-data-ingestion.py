@@ -1,6 +1,9 @@
 import streamlit as st
 import snowflake.snowpark.functions as F
+from snowflake.snowpark.types import DoubleType
 
+
+session = st.session_state.session
 
 st.subheader('Step 1: Data Ingestion')
 
@@ -25,8 +28,8 @@ with tab1:
     if st.button("Run the example", key=1):
 
         # Show the file before loading
-        st.session_state.session.sql("USE ML_HOL_DB;")
-        st.write(st.session_state.session.sql("LS @DIAMONDS_ASSETS;"))
+        session.sql("USE ML_HOL_DB;")
+        st.write(session.sql("LS @DIAMONDS_ASSETS;"))
 
 with tab2:
 
@@ -56,7 +59,7 @@ with tab2:
 
             # Create a Snowpark DataFrame that is configured to load data from the CSV file
             # We can now infer schema from CSV files.
-            diamonds_df = st.session_state.session.read.options({"field_delimiter": ",",
+            diamonds_df = session.read.options({"field_delimiter": ",",
                                             "field_optionally_enclosed_by": '"',
                                                 "infer_schema": True,
                                                 "parse_header": True}).csv("@DIAMONDS_ASSETS")
@@ -84,8 +87,9 @@ with tab3:
     if st.button("Run the example", key=3):
 
         if 'diamonds_df' in st.session_state:
+            diamonds_df = st.session_state.diamonds_df
 
-            st.write(st.session_state.diamonds_df.describe())
+            st.write(diamonds_df.describe())
 
         else: 
             st.write('Run the "Load" tab first to load your data!')
@@ -120,10 +124,12 @@ with tab4:
     if st.button("Run the example", key=4):
 
         if 'diamonds_df' in st.session_state:
+           
+            diamonds_df = st.session_state.diamonds_df
 
             with st.spinner('Wait for it...'):
 
-                #st.write(st.session_state.diamonds_df.to_pandas().rename(str.replace("\"",""), axis='columns'))
+                #st.write(diamonds_df.to_pandas().rename(str.replace("\"",""), axis='columns'))
 
                 def fix_values(columnn):
                     strip_spaces = F.regexp_replace(
@@ -133,8 +139,18 @@ with tab4:
                     return F.upper(strip_spaces)
                 
                 for col in ['\"cut\"']: 
-                    st.session_state.diamonds_df = st.session_state.diamonds_df.with_column(col, fix_values(col))
+                    diamonds_df = diamonds_df.with_column(col, fix_values(col))
 
-                st.write(st.session_state.diamonds_df.to_pandas().head(10))
+                #for colname in diamonds_df.columns: 
+                #    st.write(colname)
+
+                for colname in ["\"carat\"", "\"x\"", "\"y\"", "\"z\"", "\"depth\"", "\"table\""]:
+                    diamonds_df = diamonds_df.with_column(colname, diamonds_df[colname].cast(DoubleType()))
+
+                st.write(diamonds_df.to_pandas().head(10))
+
+                diamonds_df.write.mode('overwrite').save_as_table('diamonds')
+
+                st.success('Saved table!')
         else: 
             st.write('Run the "Load" tab first to load your data!')
