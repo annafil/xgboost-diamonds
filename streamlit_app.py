@@ -19,9 +19,12 @@ connection_parameters = {
 
 }
 
-st.title("🎈 Snowpark Python ML Demo")
+st.header("🎈+ ❄️ : XGBoost Prediction in Python")
 st.write(
-    "Through this quickstart guide, you will explore what's new in Snowflake for Machine Learning. You will build an end to end ML workflow from feature engineering to model training and deployment using Snowflake ML in Streamlit."
+    "This interactive 🎈Streamlit example introduces you to Machine Learning in Python on ❄️Snowflake:",
+     "\n\n - ✅ At the end of this demo, you will be able to build a simple, end to end ML workflow in Python from ingestion to a dynamic interface you can use to predict diamond prices. You will be using XGBoost and the classic [Diamonds dataset](https://ggplot2.tidyverse.org/reference/diamonds.html).",
+     "\n\n - 💡 You can run this example inside a Snowflake Notebook or a classic Jypyter Notebook on your machine. You will build an interactive application using 🎈 Streamlit at the end.",
+    "\n\n - 👉 If you prefer to download the code to run on your own, just clone or fork this [GitHub Repo](https://github.com/Snowflake-Labs/sfguide-intro-to-machine-learning-with-snowflake-ml-for-python/)."
 )
 
 session = Session.builder.configs(connection_parameters).create()
@@ -34,7 +37,8 @@ snowflake_environment = session.sql('SELECT current_user(), current_version()').
 snowpark_version = VERSION
 
 with st.sidebar: 
-    with st.expander("Connection details"):
+    with st.expander("Inspect the app connection"):
+        
         st.write('Connection Established with the following parameters:')
         st.write('User                        : ' , snowflake_environment[0][0])
         st.write('Snowpark for Python version : ', snowpark_version[0], snowpark_version[1], snowpark_version[2]) 
@@ -48,7 +52,8 @@ with st.sidebar:
 
 
 pages = {
-    "Tutorial": [
+    "🎈+ ❄️ : XGboost prediction in Python": [
+        st.Page("00-Snowflake-setup.py", title="Step 0: Set up"),
         st.Page("01-data-ingestion.py", title="Step 1: Data Ingestion"),
         st.Page("02-feature-transformation.py", title="Step 2: Feature Transformation"),
     ]
