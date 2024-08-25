@@ -154,7 +154,7 @@ with tab4:
 with tab5:
 
     code_write_table = '''
-            # Grab file info and display it before loading
+            # Persist diamonds_df in a table in our schema
 
             diamonds_df.write.mode('overwrite').save_as_table('diamonds')
     '''
@@ -162,4 +162,11 @@ with tab5:
     st.code(code_write_table)
 
     if st.button("Run the example", key=5):
-        st.success('Saved table!')
+        input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.diamonds"
+
+        test_df = session.table(input_tbl)
+
+        if test_df:
+            st.success('Saved table!')
+        else: 
+            st.write('Oops something went wrong! Please contact XX@yy.com to report an issue with this app')
