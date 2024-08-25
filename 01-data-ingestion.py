@@ -12,7 +12,7 @@ st.write("The diamonds dataset has been widely used in data science and machine 
 st.info("You can paste the below code into any Jupyter/Snowflake notebook.", icon="💡")
 
 # setup our tabs 
-tab1, tab2, tab3, tab4 = st.tabs(["Preview", "Load", "Show descriptive stats", "Data Cleaning"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Preview", "Load", "Show descriptive stats", "Data Cleaning", "Write back to warehouse"])
 
 with tab1: 
 
@@ -148,9 +148,18 @@ with tab4:
                     diamonds_df = diamonds_df.with_column(colname, diamonds_df[colname].cast(DoubleType()))
 
                 st.write(diamonds_df.to_pandas().head(10))
-
-                diamonds_df.write.mode('overwrite').save_as_table('diamonds')
-
-                st.success('Saved table!')
         else: 
             st.write('Run the "Load" tab first to load your data!')
+
+with tab5:
+
+    code_write_table = '''
+            # Grab file info and display it before loading
+
+            diamonds_df.write.mode('overwrite').save_as_table('diamonds')
+    '''
+
+    st.code(code_write_table)
+
+    if st.button("Run the example", key=5):
+        st.success('Saved table!')

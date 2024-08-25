@@ -1,5 +1,6 @@
 import streamlit as st
 import snowflake.ml.modeling.preprocessing as snowml
+from snowflake.snowpark.types import DecimalType
 
 
 st.subheader("Step 2: Feature Transformations")
@@ -31,12 +32,12 @@ st.write(
 )
 
 # Normalize the CARAT column
-snowml_mms = snowml.MinMaxScaler(input_cols=["CARAT"], output_cols=["CARAT_NORM"])
+snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
 normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
 
 # Reduce the number of decimals
-new_col = normalized_diamonds_df.col("CARAT_NORM").cast(DecimalType(7, 6))
-normalized_diamonds_df = normalized_diamonds_df.with_column("CARAT_NORM", new_col)
+new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
+normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
 
 st.write(normalized_diamonds_df)
 
