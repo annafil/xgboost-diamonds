@@ -5,7 +5,7 @@ from snowflake.snowpark.types import DoubleType
 
 session = st.session_state.session
 
-st.subheader('Step 1: Data Ingestion')
+st.subheader('Step 1: Load & Clean Data')
 
 st.write("The diamonds dataset has been widely used in data science and machine learning. We will use it to demonstrate Snowflake's native data science transformers in terms of database functionality and Spark & Pandas comportablity, using non-synthetic and statistically appropriate data that is well known to the ML community.")
 
@@ -106,6 +106,12 @@ with tab3:
 with tab4:
 
     code_data_cleaning = '''
+
+    # make a new dataframe for our clean data
+    # this step is optional but a good practice that makes it
+    # easier to debug your code later on 
+    diamonds_df_clean = diamonds_df
+
     # define a function that takes column values, 
     # converts them to upper case and 
     # replaces spaces with underscores 
@@ -121,11 +127,11 @@ with tab4:
     # we need to escape them to load our column 
 
     for col in ['\\"cut\\"']: 
-        diamonds_df = diamonds_df.with_column(col, fix_values(col))
+        diamonds_df_clean = diamonds_df_clean.with_column(col, fix_values(col))
 
     # show the final product! 
 
-    diamonds_df.head(10)
+    diamonds_df_clean.head(10)
     '''
 
     st.code(code_data_cleaning)
@@ -146,6 +152,8 @@ with tab4:
 
                 #diamonds_df.columns
 
+                diamonds_df_clean = diamonds_df
+
                 def fix_values(columnn):
                     strip_spaces = F.regexp_replace(
                                         F.col(columnn), 
@@ -154,15 +162,25 @@ with tab4:
                     return F.upper(strip_spaces)
                 
                 for col in ['\"cut\"']: 
-                    diamonds_df = diamonds_df.with_column(col, fix_values(col))
+                    diamonds_df_clean = diamonds_df_clean.with_column(col, fix_values(col))
 
                 #for colname in diamonds_df.columns: 
                 #    st.write(colname)
 
                 for colname in ["\"carat\"", "\"x\"", "\"y\"", "\"z\"", "\"depth\"", "\"table\""]:
-                    diamonds_df = diamonds_df.with_column(colname, diamonds_df[colname].cast(DoubleType()))
+                    diamonds_df_clean = diamonds_df_clean.with_column(colname, diamonds_df_clean[colname].cast(DoubleType()))
 
-                st.write(diamonds_df.to_pandas().head(10))
+                st.session_state['diamonds_df_clean'] = diamonds_df_clean
+
+                st.write("Here's the first 10 rows of our `diamonds_df_clean` dataframe:")
+
+                st.write(diamonds_df_clean.to_pandas().head(10))
+
+                # overwrites data with formatted version in actual db -- uncomment to fix any weirdness
+                # diamonds_df_clean.write.mode('overwrite').save_as_table('diamonds')
+
+
+
         else: 
             st.write('Run the "Load" tab first to load your data!')
 
@@ -171,12 +189,13 @@ with tab5:
     code_write_table = '''
             # Persist diamonds_df in a table in our schema
 
-            diamonds_df.write.mode('overwrite').save_as_table('diamonds')
+            diamonds_df_clean.write.mode('overwrite').save_as_table('diamonds')
     '''
 
     st.code(code_write_table)
 
     if st.button("Run the example", key=5):
+
         input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.diamonds"
 
         test_df = session.table(input_tbl)

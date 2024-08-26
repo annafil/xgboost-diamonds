@@ -60,7 +60,7 @@ pages = {
     "🎈+ ❄️ : XGbBost prediction in Python": [
         st.Page("overview.py", title="Overview"),
         st.Page("00-Snowflake-setup.py", title="Step 0: Set up"),
-        st.Page("01-data-ingestion.py", title="Step 1: Data Ingestion"),
+        st.Page("01-data-loading-cleaning.py", title="Step 1: Load & Clean Data"),
         st.Page("02-feature-transformation.py", title="Step 2: Feature Transformation"),
     ]
 }

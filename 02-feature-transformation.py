@@ -37,25 +37,27 @@ with tab1:
         input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
 
          # Load table data into a DataFrame
-        diamonds_df = session.table(input_tbl)
+        diamonds_df_clean = session.table(input_tbl)
 
-        diamonds_df.head(10)
+        diamonds_df_clean.head(10)
     '''
 
     st.code(code_load_clean_data)
 
     if st.button("Run the example", key=1):
 
+        with st.spinner('Wait for it...'):
+            # Specify the table name where we stored the diamonds dataset
+            # **nChange this only if you named your table something else in the data ingest notebook **
+            DEMO_TABLE = 'diamonds'
+            input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
 
-        # Specify the table name where we stored the diamonds dataset
-        # **nChange this only if you named your table something else in the data ingest notebook **
-        DEMO_TABLE = 'diamonds'
-        input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
+            # First, we read in the data from a Snowflake table into a Snowpark DataFrame
+            diamonds_df_clean = session.table(input_tbl)
 
-        # First, we read in the data from a Snowflake table into a Snowpark DataFrame
-        diamonds_df = session.table(input_tbl)
+            st.write(diamonds_df_clean.to_pandas().head(10))
 
-        st.write(diamonds_df.to_pandas().head(10))
+            st.session_state['diamonds_df_clean'] = diamonds_df_clean
 
 
 with tab2: 
@@ -77,6 +79,26 @@ with tab2:
 
     st.code(code_minmaxscaler)
 
+    if st.button("Run the example", key=2):
+
+        if 'diamonds_df_clean' in st.session_state:
+            diamonds_df_clean = st.session_state.diamonds_df_clean
+
+            with st.spinner('Wait for it...'):
+                #try:
+                # Normalize the CARAT column
+                snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
+                normalized_diamonds_df = snowml_mms.fit(diamonds_df_clean).transform(diamonds_df_clean)
+
+                # Reduce the number of decimals
+                new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
+                normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+
+                # Save to reuse elsewhere
+                st.session_state.normalized_diamonds_df = normalized_diamonds_df
+
+                st.write(normalized_diamonds_df)
+
     st.write("We can also use the OrdinalEncoder to transform COLOR and CLARITY from categorical to numerical values so they are more meaningful.")
 
     code_ordinalencoder ='''
@@ -97,38 +119,29 @@ with tab2:
 
     st.code(code_ordinalencoder)
 
+    if st.button("Run the example", key=3):
 
-    if st.button("Run the example", key=2):
+        if 'normalized_diamonds_df' in st.session_state:
+            normalized_diamonds_df = st.session_state.normalized_diamonds_df
 
-        if 'diamonds_df' in st.session_state:
-            diamonds_df = st.session_state.diamonds_df
+            with st.spinner('Wait for it...'):
 
-        try:
-            # Normalize the CARAT column
-            snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
-            normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
+                try:
+                    categories = {
+                        "\"cut\"": np.array(["IDEAL", "PREMIUM", "VERY_GOOD", "GOOD", "FAIR"]),
+                        "\"clarity\"": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
+                    }
+                    snowml_oe = snowml.OrdinalEncoder(input_cols=["\"cut\"", "\"clarity\""], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
+                    ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
 
-            # Reduce the number of decimals
-            new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
-            normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+                    # Show the encoding
+                    st.write(snowml_oe._state_pandas)
 
-            st.write(normalized_diamonds_df)
-
-            categories = {
-                "\"cut\"": np.array(["Ideal", "Premium", "Very Good", "Good", "Fair"]),
-                "\"clarity\"": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
-            }
-            snowml_oe = snowml.OrdinalEncoder(input_cols=["\"cut\"", "\"clarity\""], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
-            #ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
-
-            # Show the encoding
-            #st.write(snowml_oe._state_pandas)
-
-            #st.write(ord_encoded_diamonds_df)
+                    st.write(ord_encoded_diamonds_df)
 
 
-        except: 
-            st.write('Run the load example first!')
+                except: 
+                    st.write('Run MinMaxScaler above first!')
 
 
 
