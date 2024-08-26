@@ -1,6 +1,7 @@
 import streamlit as st
 import snowflake.snowpark.functions as F
 from snowflake.snowpark.types import DoubleType
+import pandas as pd
 
 
 session = st.session_state.session
@@ -111,6 +112,22 @@ with tab4:
     # this step is optional but a good practice that makes it
     # easier to debug your code later on 
     diamonds_df_clean = diamonds_df
+    
+    # Let's make our column names uppercase and strip extra "s
+    # Except TABLE is a reserved keyword in Snowflake 
+    # We want to uppercase it but keep escaping this one
+    colnames = {}
+
+    for column in diamonds_df.columns:
+        if column != '"table"':
+            col_new = column.replace('"','').upper()
+            colnames.update({column: col_new})
+        else: 
+            col_new = column.upper()
+            colnames.update({column: col_new})
+
+
+    diamonds_df_upper = diamonds_df.rename(colnames)
 
     # define a function that takes column values, 
     # converts them to upper case and 
@@ -123,14 +140,14 @@ with tab4:
                                 '_')
             return F.upper(strip_spaces)
 
-    # our file is loaded with extra \" characters
-    # we need to escape them to load our column 
-
-    for col in ['\\"cut\\"']: 
+    for col in ['CUT']: 
         diamonds_df_clean = diamonds_df_clean.with_column(col, fix_values(col))
 
-    # show the final product! 
+    for colname in ['CARAT', 'X', 'Y', 'Z', 'DEPTH', 'TABLE_PCT']:
+        diamonds_df_clean = diamonds_df_clean.with_column(colname, diamonds_df_clean[colname].cast(DoubleType()))
 
+
+    # show the final product! 
     diamonds_df_clean.head(10)
     '''
 
@@ -142,44 +159,40 @@ with tab4:
            
             diamonds_df = st.session_state.diamonds_df
 
-            with st.spinner('Wait for it...'):
+            colnames = {}
 
-                #st.write(diamonds_df.to_pandas().rename(str.replace("\"",""), axis='columns'))
+            for column in diamonds_df.columns:
+                if column != '"table"':
+                    col_new = column.replace('"','').upper()
+                    colnames.update({column: col_new})
+                else: 
+                    col_new = 'TABLE_PCT'
+                    colnames.update({column: col_new})
+        
 
-                #diamonds_df.columns
+            diamonds_df_upper = diamonds_df.rename(colnames)
 
-                #diamonds_df.to_pandas().rename(columns = {'\"carat\"':'CARAT'})
+            def fix_values(columnn):
+                strip_spaces = F.regexp_replace(
+                                    F.col(columnn), 
+                                    '[^a-zA-Z0-9]+',
+                                    '_')
+                return F.upper(strip_spaces)
+            
+            for col in ['CUT']: 
+                diamonds_df_clean = diamonds_df_upper.with_column(col, fix_values(col))
 
-                #diamonds_df.columns
+            for colname in ['CARAT', 'X', 'Y', 'Z', 'DEPTH', 'TABLE_PCT']:
+                diamonds_df_clean = diamonds_df_clean.with_column(colname, diamonds_df_clean[colname].cast(DoubleType()))
 
-                diamonds_df_clean = diamonds_df
+            st.session_state['diamonds_df_clean'] = diamonds_df_clean
 
-                def fix_values(columnn):
-                    strip_spaces = F.regexp_replace(
-                                        F.col(columnn), 
-                                        '[^a-zA-Z0-9]+',
-                                        '_')
-                    return F.upper(strip_spaces)
-                
-                for col in ['\"cut\"']: 
-                    diamonds_df_clean = diamonds_df_clean.with_column(col, fix_values(col))
+            st.write("Here's the first 10 rows of our `diamonds_df_clean` dataframe:")
 
-                #for colname in diamonds_df.columns: 
-                #    st.write(colname)
+            st.write(diamonds_df_clean.to_pandas().head(10))
 
-                for colname in ["\"carat\"", "\"x\"", "\"y\"", "\"z\"", "\"depth\"", "\"table\""]:
-                    diamonds_df_clean = diamonds_df_clean.with_column(colname, diamonds_df_clean[colname].cast(DoubleType()))
-
-                st.session_state['diamonds_df_clean'] = diamonds_df_clean
-
-                st.write("Here's the first 10 rows of our `diamonds_df_clean` dataframe:")
-
-                st.write(diamonds_df_clean.to_pandas().head(10))
-
-                # overwrites data with formatted version in actual db -- uncomment to fix any weirdness
-                # diamonds_df_clean.write.mode('overwrite').save_as_table('diamonds')
-
-
+            # overwrites data with formatted version in actual db -- uncomment to fix any weirdness
+            #diamonds_df_clean.write.mode('overwrite').save_as_table('diamonds')
 
         else: 
             st.write('Run the "Load" tab first to load your data!')

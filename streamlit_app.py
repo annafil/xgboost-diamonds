@@ -20,12 +20,6 @@ connection_parameters = {
 }
 
 st.header("🎈+ ❄️ : XGBoost Prediction in Python")
-st.write(
-    "This interactive 🎈Streamlit example introduces you to Machine Learning in Python on ❄️Snowflake:",
-     "\n\n - ✅ At the end of this demo, you will be able to build a simple, end to end ML workflow in Python from ingestion to a dynamic interface you can use to predict diamond prices. You will be using [XGBoost](https://xgboost.readthedocs.io/en/stable/) and the classic [Diamonds dataset](https://ggplot2.tidyverse.org/reference/diamonds.html).",
-     "\n\n - 💡 You can run this example inside a [Snowflake Notebook](https://docs.snowflake.com/en/user-guide/ui-snowsight/notebooks) or a [classic Jypyter Notebook on your machine](https://www.snowflake.com/en/blog/build-code-using-snowpark-notebook/). You will build an interactive application using 🎈 [Streamlit](https://streamlit.io/) at the end.",
-    "\n\n - 👉 If you prefer to download the code to run on your own, just clone or fork this [GitHub Repo](https://github.com/Snowflake-Labs/sfguide-intro-to-machine-learning-with-snowflake-ml-for-python/)."
-)
 
 session = Session.builder.configs(connection_parameters).create()
 
@@ -57,11 +51,12 @@ with st.sidebar:
 
 
 pages = {
-    "🎈+ ❄️ : XGbBost prediction in Python": [
+    "🎈+ ❄️ : XGBoost prediction in Python": [
         st.Page("overview.py", title="Overview"),
         st.Page("00-Snowflake-setup.py", title="Step 0: Set up"),
         st.Page("01-data-loading-cleaning.py", title="Step 1: Load & Clean Data"),
         st.Page("02-feature-transformation.py", title="Step 2: Feature Transformation"),
+        st.Page("03-training.py", title="Step 3: Training!")
     ]
 }
 
