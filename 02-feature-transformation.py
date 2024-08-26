@@ -139,6 +139,7 @@ with tab2:
 
                     st.write(ord_encoded_diamonds_df)
 
+                    st.session_state.ord_encoded_diamonds_df = ord_encoded_diamonds_df
 
                 except: 
                     st.write('Run MinMaxScaler above first!')
