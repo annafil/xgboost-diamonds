@@ -11,6 +11,15 @@ st.write("The diamonds dataset has been widely used in data science and machine 
 
 st.info("You can paste the below code into any Jupyter/Snowflake notebook.", icon="💡")
 
+with st.expander("Libraries you need to import for this step"):
+
+    st.code(f"""
+
+        import snowflake.snowpark.functions as F
+        from snowflake.snowpark.types import DoubleType
+
+    """)
+
 # setup our tabs 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Preview", "Load", "Show descriptive stats", "Data Cleaning", "Write back to warehouse"])
 

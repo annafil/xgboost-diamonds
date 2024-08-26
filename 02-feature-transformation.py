@@ -1,6 +1,7 @@
 import streamlit as st
 import snowflake.ml.modeling.preprocessing as snowml
 from snowflake.snowpark.types import DecimalType
+import numpy as np
 
 
 st.subheader("Step 2: Feature Transformations")
@@ -10,6 +11,16 @@ st.write(
     "We will also build a preprocessing pipeline to be used in the ML modeling notebook.", 
     "\n\n **Note:** All feature transformations using Snowpark ML are distributed operations in the same way that Snowpark DataFrame operations are."
 )
+
+with st.expander("Libraries you need to import for this step"):
+
+    st.code(f"""
+
+        import snowflake.ml.modeling.preprocessing as snowml
+        from snowflake.snowpark.types import DecimalType
+        import numpy as np
+
+    """)
 
 session = st.session_state.session
 
@@ -53,22 +64,71 @@ with tab2:
             "\n\n Let's use the MinMaxScaler to normalize the CARAT column."
     )
 
+    code_minmaxscaler = '''
+        # Normalize the CARAT column
+        snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
+        normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
+
+        # Reduce the number of decimals
+        new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
+        normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+
+    '''
+
+    st.code(code_minmaxscaler)
+
+    st.write("We can also use the OrdinalEncoder to transform COLOR and CLARITY from categorical to numerical values so they are more meaningful.")
+
+    code_ordinalencoder ='''
+
+        categories = {
+            "CUT": np.array(["IDEAL", "PREMIUM", "VERY_GOOD", "GOOD", "FAIR"]),
+            "CLARITY": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
+        }
+        snowml_oe = snowml.OrdinalEncoder(input_cols=["CUT", "CLARITY"], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
+        ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
+
+        # Show the encoding
+        print(snowml_oe._state_pandas)
+
+        ord_encoded_diamonds_df.show()
+
+    '''
+
+    st.code(code_ordinalencoder)
+
+
     if st.button("Run the example", key=2):
 
         if 'diamonds_df' in st.session_state:
             diamonds_df = st.session_state.diamonds_df
 
-        try:
+        #try:
             # Normalize the CARAT column
-            snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
-            normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
+        snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
+        normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
 
-            # Reduce the number of decimals
-            new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
-            normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+        # Reduce the number of decimals
+        new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
+        normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
 
-            st.write(normalized_diamonds_df)
+        st.write(normalized_diamonds_df)
 
-        except: 
-            st.write('Run the load example first!')
+        categories = {
+            "\"cut\"": np.array(["Ideal", "Premium", "Very Good", "Good", "Fair"]),
+            "\"clarity\"": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
+        }
+        snowml_oe = snowml.OrdinalEncoder(input_cols=["\"cut\"", "\"clarity\""], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
+        ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
+
+        # Show the encoding
+        st.write(snowml_oe._state_pandas)
+
+        st.write(ord_encoded_diamonds_df)
+
+
+        #except: 
+        #    st.write('Run the load example first!')
+
+
 
