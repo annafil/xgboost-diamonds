@@ -131,11 +131,11 @@ with tab4:
 
                 #st.write(diamonds_df.to_pandas().rename(str.replace("\"",""), axis='columns'))
 
-                diamonds_df.columns
+                #diamonds_df.columns
 
-                diamonds_df.to_pandas().rename(columns = {'\"carat\"':'CARAT'})
+                #diamonds_df.to_pandas().rename(columns = {'\"carat\"':'CARAT'})
 
-                diamonds_df.columns
+                #diamonds_df.columns
 
                 def fix_values(columnn):
                     strip_spaces = F.regexp_replace(
