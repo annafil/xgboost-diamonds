@@ -3,7 +3,7 @@ from snowflake.snowpark import Session
 from snowflake.snowpark.version import VERSION
 from snowflake.snowpark.types import StructType, StructField, DoubleType, StringType
 import os
-
+from streamlit.components.v1 import html
 
 # config 
 
@@ -62,3 +62,25 @@ pages = {
 
 pg = st.navigation(pages)
 pg.run()
+
+
+# Define your javascript
+ga_js = """
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MDTNPSFEW7"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-MDTNPSFEW7');
+    </script>
+
+"""
+
+# Wrapt the javascript as html code
+ga_html = f"<script>{ga_js}</script>"
+
+# load cookie
+html(ga_html)
