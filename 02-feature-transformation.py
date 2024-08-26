@@ -103,32 +103,32 @@ with tab2:
         if 'diamonds_df' in st.session_state:
             diamonds_df = st.session_state.diamonds_df
 
-        #try:
+        try:
             # Normalize the CARAT column
-        snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
-        normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
+            snowml_mms = snowml.MinMaxScaler(input_cols=["\"carat\""], output_cols=["carat_norm"])
+            normalized_diamonds_df = snowml_mms.fit(diamonds_df).transform(diamonds_df)
 
-        # Reduce the number of decimals
-        new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
-        normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
+            # Reduce the number of decimals
+            new_col = normalized_diamonds_df.col("carat_norm").cast(DecimalType(7, 6))
+            normalized_diamonds_df = normalized_diamonds_df.with_column("carat_norm", new_col)
 
-        st.write(normalized_diamonds_df)
+            st.write(normalized_diamonds_df)
 
-        categories = {
-            "\"cut\"": np.array(["Ideal", "Premium", "Very Good", "Good", "Fair"]),
-            "\"clarity\"": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
-        }
-        snowml_oe = snowml.OrdinalEncoder(input_cols=["\"cut\"", "\"clarity\""], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
-        ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
+            categories = {
+                "\"cut\"": np.array(["Ideal", "Premium", "Very Good", "Good", "Fair"]),
+                "\"clarity\"": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
+            }
+            snowml_oe = snowml.OrdinalEncoder(input_cols=["\"cut\"", "\"clarity\""], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
+            #ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
 
-        # Show the encoding
-        st.write(snowml_oe._state_pandas)
+            # Show the encoding
+            #st.write(snowml_oe._state_pandas)
 
-        st.write(ord_encoded_diamonds_df)
+            #st.write(ord_encoded_diamonds_df)
 
 
-        #except: 
-        #    st.write('Run the load example first!')
+        except: 
+            st.write('Run the load example first!')
 
 
 
