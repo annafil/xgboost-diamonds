@@ -61,17 +61,21 @@ with tab1:
     if st.button("Run the example", key=1):
 
         with st.spinner('Wait for it...'):
-            # Specify the table name where we stored the diamonds dataset
-            # **nChange this only if you named your table something else in the data ingest notebook **
-            DEMO_TABLE = 'diamonds'
-            input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
 
-            # First, we read in the data from a Snowflake table into a Snowpark DataFrame
-            diamonds_df_clean = session.table(input_tbl)
+            try: 
+                # Specify the table name where we stored the diamonds dataset
+                # **nChange this only if you named your table something else in the data ingest notebook **
+                DEMO_TABLE = 'diamonds'
+                input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
 
-            st.session_state['diamonds_df_clean'] = diamonds_df_clean
+                # First, we read in the data from a Snowflake table into a Snowpark DataFrame
+                diamonds_df_clean = session.table(input_tbl)
 
-            st.write(diamonds_df_clean.to_pandas().head(10))
+                st.session_state['diamonds_df_clean'] = diamonds_df_clean
+
+                st.write(diamonds_df_clean.to_pandas().head(10))
+            except: 
+                st.error("Hmm, I couldn't load the diamonds dataset -- that shouldn't have happened! Contact X@yy.com to report an issue with this app.", icon="🚨")
 
 with tab2: 
     st.write(
@@ -94,11 +98,12 @@ with tab2:
 
     if st.button("Run the example", key=2):
 
-        if 'diamonds_df_clean' in st.session_state:
-            diamonds_df_clean = st.session_state.diamonds_df_clean
+        with st.spinner('Wait for it...'):
+                 
+            if 'diamonds_df_clean' in st.session_state:
+                diamonds_df_clean = st.session_state.diamonds_df_clean
 
-            with st.spinner('Wait for it...'):
-                #try:
+            try:
                 # Normalize the CARAT column
                 snowml_mms = snowml.MinMaxScaler(input_cols=["CARAT"], output_cols=["CARAT_NORM"])
                 normalized_diamonds_df = snowml_mms.fit(diamonds_df_clean).transform(diamonds_df_clean)
@@ -111,6 +116,8 @@ with tab2:
                 st.session_state.normalized_diamonds_df = normalized_diamonds_df
 
                 st.write(normalized_diamonds_df)
+            except: 
+                st.warning('Oops! Did you remember to load the data in the first tab?', icon="🤭")
 
     st.write("We can also use the OrdinalEncoder to transform COLOR and CLARITY from categorical to numerical values so they are more meaningful.")
 
@@ -134,28 +141,28 @@ with tab2:
 
     if st.button("Run the example", key=3):
 
-        if 'normalized_diamonds_df' in st.session_state:
-            normalized_diamonds_df = st.session_state.normalized_diamonds_df
+        with st.spinner('Wait for it...'):
 
-            with st.spinner('Wait for it...'):
+            if 'normalized_diamonds_df' in st.session_state:
+                normalized_diamonds_df = st.session_state.normalized_diamonds_df
 
-                try:
-                    categories = {
-                        "CUT": np.array(["IDEAL", "PREMIUM", "VERY_GOOD", "GOOD", "FAIR"]),
-                        "CLARITY": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
-                    }
-                    snowml_oe = snowml.OrdinalEncoder(input_cols=["CUT", "CLARITY"], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
-                    ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
+            try:
+                categories = {
+                    "CUT": np.array(["IDEAL", "PREMIUM", "VERY_GOOD", "GOOD", "FAIR"]),
+                    "CLARITY": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
+                }
+                snowml_oe = snowml.OrdinalEncoder(input_cols=["CUT", "CLARITY"], output_cols=["CUT_OE", "CLARITY_OE"], categories=categories)
+                ord_encoded_diamonds_df = snowml_oe.fit(normalized_diamonds_df).transform(normalized_diamonds_df)
 
-                    # Show the encoding
-                    st.write(snowml_oe._state_pandas)
+                # Show the encoding
+                st.write(snowml_oe._state_pandas)
 
-                    st.write(ord_encoded_diamonds_df)
+                st.write(ord_encoded_diamonds_df)
 
-                    st.session_state.ord_encoded_diamonds_df = ord_encoded_diamonds_df
+                st.session_state.ord_encoded_diamonds_df = ord_encoded_diamonds_df
 
-                except: 
-                    st.write('Run MinMaxScaler above first!')
+            except: 
+                st.warning('Oops! You need to run MinMaxScaler above first!', icon="🤭")
 
 with tab3: 
 
@@ -214,46 +221,66 @@ with tab3:
 
     if st.button("Run the example", key=4):
 
-        if st.session_state.diamonds_df_clean: 
-            diamonds_df_clean = st.session_state.diamonds_df_clean
-            # Categorize all the features for processing
-            CATEGORICAL_COLUMNS = ["CUT", "COLOR", "CLARITY"]
-            CATEGORICAL_COLUMNS_OE = ["CUT_OE", "COLOR_OE", "CLARITY_OE"] # To name the ordinal encoded columns
-            NUMERICAL_COLUMNS = ["CARAT", "DEPTH", "TABLE_PCT", "X", "Y", "Z"]
+        with st.spinner('Wait for it...'):
 
-            categories = {
-                "CUT": np.array(["IDEAL", "PREMIUM", "VERY_GOOD", "GOOD", "FAIR"]),
-                "CLARITY": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
-                "COLOR": np.array(['D', 'E', 'F', 'G', 'H', 'I', 'J']),
-            }
+            if 'diamonds_df_clean' in st.session_state: 
 
-            # Build the pipeline
-            preprocessing_pipeline = Pipeline(
-                steps=[
-                        (
-                            "OE",
-                            snowml.OrdinalEncoder(
-                                input_cols=CATEGORICAL_COLUMNS,
-                                output_cols=CATEGORICAL_COLUMNS_OE,
-                                categories=categories,
-                            )
-                        ),
-                        (
-                            "MMS",
-                            snowml.MinMaxScaler(
-                                clip=True,
-                                input_cols=NUMERICAL_COLUMNS,
-                                output_cols=NUMERICAL_COLUMNS,
-                            )
-                        )
-                ]
-            )
+                diamonds_df_clean = st.session_state.diamonds_df_clean
 
-            PIPELINE_FILE = '/tmp/preprocessing_pipeline.joblib'
-            joblib.dump(preprocessing_pipeline, PIPELINE_FILE) # We are just pickling it locally first
+            try:
+                     # Categorize all the features for processing
+                    CATEGORICAL_COLUMNS = ["CUT", "COLOR", "CLARITY"]
+                    CATEGORICAL_COLUMNS_OE = ["CUT_OE", "COLOR_OE", "CLARITY_OE"] # To name the ordinal encoded columns
+                    NUMERICAL_COLUMNS = ["CARAT", "DEPTH", "TABLE_PCT", "X", "Y", "Z"]
 
-            transformed_diamonds_df = preprocessing_pipeline.fit(diamonds_df_clean).transform(diamonds_df_clean)
-            st.write(
-                "Here's our transformed dataframe using Snowflake's pipelines!", 
-                transformed_diamonds_df.to_pandas().head(10))
-            
+                    categories = {
+                        "CUT": np.array(["IDEAL", "PREMIUM", "VERY_GOOD", "GOOD", "FAIR"]),
+                        "CLARITY": np.array(["IF", "VVS1", "VVS2", "VS1", "VS2", "SI1", "SI2", "I1", "I2", "I3"]),
+                        "COLOR": np.array(['D', 'E', 'F', 'G', 'H', 'I', 'J']),
+                    }
+
+                    # Build the pipeline
+                    preprocessing_pipeline = Pipeline(
+                        steps=[
+                                (
+                                    "OE",
+                                    snowml.OrdinalEncoder(
+                                        input_cols=CATEGORICAL_COLUMNS,
+                                        output_cols=CATEGORICAL_COLUMNS_OE,
+                                        categories=categories,
+                                    )
+                                ),
+                                (
+                                    "MMS",
+                                    snowml.MinMaxScaler(
+                                        clip=True,
+                                        input_cols=NUMERICAL_COLUMNS,
+                                        output_cols=NUMERICAL_COLUMNS,
+                                    )
+                                )
+                        ]
+                    )
+
+                    PIPELINE_FILE = '/tmp/preprocessing_pipeline.joblib'
+                    joblib.dump(preprocessing_pipeline, PIPELINE_FILE) # We are just pickling it locally first
+
+                    transformed_diamonds_df = preprocessing_pipeline.fit(diamonds_df_clean).transform(diamonds_df_clean)
+
+                    # session.file.put(PIPELINE_FILE, "@ML_HOL_ASSETS", overwrite=True)
+
+                    st.write(
+                        "Here's our transformed dataframe using Snowflake's pipelines!", 
+                        transformed_diamonds_df.to_pandas().head(10))
+                    
+                    @st.dialog("💪 You did it!")
+                    def you_did_it():
+                        st.write(
+                            "You got through the hard parts -- munging your data -- and learned how to do this with a powerful cloud platform simplifying your workflow.",
+                            "\n\n You're now ready for the fun part :) Training and prediction!")
+                    
+                    st.snow()
+                    you_did_it()
+            except:
+
+                st.warning("Oops I'm missing some clean data. Did you run the load step?", icon="🤭")
+        
