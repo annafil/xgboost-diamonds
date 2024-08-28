@@ -10,11 +10,7 @@ import seaborn as sns
 
 from snowflake.ml.modeling.metrics.correlation import correlation
 
-
 session = st.session_state.session
-
-
-
 
 st.subheader("Step 3: Exploring data and training our model")
 
@@ -26,6 +22,21 @@ st.write(
 
 st.info("You can paste the below code into any Jupyter/Snowflake notebook.", icon="💡")
 
+with st.expander("Libraries you need to import for this step"):
+
+    st.code(f"""
+
+        import json
+        import joblib
+
+
+        import numpy as np
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+
+        from snowflake.ml.modeling.metrics.correlation import correlation
+
+    """)
 
 tab1,tab2, tab3, tab4 = st.tabs(["Load data + pre-processing pipeline", "Explore the data", "Built an XGBoost regression model","Find optimal model parameters"])
 
