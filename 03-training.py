@@ -45,7 +45,21 @@ with tab1:
 
     st.write("👉 Note that we've reused our code from Step 2 here to populate `diamonds_df_clean`. If you are working in the same notebook from Step 2, you can skip this :) ")
 
-    st.code(st.session_state.code_load_clean_data)
+    code_load_clean_data = '''
+
+        # Specify the table name where we stored the diamonds dataset
+        # Change this only if you named your table something else 
+        # in the data ingest step
+        DEMO_TABLE = 'diamonds'
+        input_tbl = f"{session.get_current_database()}.{session.get_current_schema()}.{DEMO_TABLE}"
+
+         # Load table data into a DataFrame
+        diamonds_df_clean = session.table(input_tbl)
+
+        diamonds_df_clean.head(10)
+    '''
+
+    st.code(code_load_clean_data)
 
     st.write("Now let's load the pipeline we created at the end of Step 2, so we don't have to rewrite our transformation logic.")
 

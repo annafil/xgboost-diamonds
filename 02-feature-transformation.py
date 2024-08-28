@@ -58,8 +58,6 @@ with tab1:
 
     st.code(code_load_clean_data)
 
-    st.session_state.code_load_clean_data = code_load_clean_data
-
     if st.button("Run the example", key=1):
 
         with st.spinner('Wait for it...'):
