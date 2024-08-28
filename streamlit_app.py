@@ -5,6 +5,7 @@ from snowflake.snowpark.types import StructType, StructField, DoubleType, String
 import os
 from streamlit.components.v1 import html
 
+
 # config 
 
 connection_parameters = {
