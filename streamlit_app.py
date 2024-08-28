@@ -5,6 +5,7 @@ from snowflake.snowpark.types import StructType, StructField, DoubleType, String
 import os
 from streamlit.components.v1 import html
 
+st.set_page_config(page_title="XGBoost Prediction in Python")
 
 # config 
 
