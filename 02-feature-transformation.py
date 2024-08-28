@@ -266,7 +266,7 @@ with tab3:
 
                     transformed_diamonds_df = preprocessing_pipeline.fit(diamonds_df_clean).transform(diamonds_df_clean)
 
-                    # session.file.put(PIPELINE_FILE, "@ML_HOL_ASSETS", overwrite=True)
+                    session.file.put(PIPELINE_FILE, "@ML_HOL_ASSETS", overwrite=True)
 
                     st.write(
                         "Here's our transformed dataframe using Snowflake's pipelines!", 
